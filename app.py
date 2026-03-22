@@ -69,14 +69,14 @@ if uploaded_file:
     if query:
         with st.spinner("Thinking..."):
 
-            # 🔥 Better retrieval
+            # Better retrieval
             results = db.similarity_search(query, k=3)
 
             if results:
                 # Combine context
                 context = " ".join([r.page_content for r in results])
 
-                # 🔥 Strong Prompt
+                # Strong Prompt
                 prompt = f"""
 You are a professional AI assistant.
 
@@ -108,7 +108,7 @@ Answer:
                 st.subheader("📌 Answer:")
                 st.success(answer)
 
-                # 🔥 (Optional - show source)
+                #  (Optional - show source)
                 with st.expander("🔍 Source Context"):
                     for i, doc in enumerate(results):
                         st.write(f"Chunk {i+1}:")
