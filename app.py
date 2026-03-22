@@ -6,6 +6,7 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import tempfile
 import torch
+from sklearn.metrics.pairwise import cosine_similarity  
 
 # -----------------------------
 # Load FLAN-T5 BASE (Better Model)
@@ -17,6 +18,20 @@ def load_model():
     return tokenizer, model
 
 tokenizer, model = load_model()
+
+# -----------------------------
+# ✅ Evaluation Function
+# -----------------------------
+def evaluate_answer(query, context, answer, embeddings):
+
+    query_vec = embeddings.embed_query(query)
+    context_vec = embeddings.embed_query(context)
+    answer_vec = embeddings.embed_query(answer)
+
+    relevance = cosine_similarity([query_vec], [answer_vec])[0][0]
+    faithfulness = cosine_similarity([context_vec], [answer_vec])[0][0]
+
+    return relevance, faithfulness
 
 # -----------------------------
 # UI Setup
@@ -105,10 +120,28 @@ Answer:
                 # Decode
                 answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
+                # -----------------------------
+                # Answer Output
+                # -----------------------------
                 st.subheader("📌 Answer:")
                 st.success(answer)
 
-                #  (Optional - show source)
+                # -----------------------------
+                # ✅ Evaluation Section (NEW)
+                # -----------------------------
+                relevance, faithfulness = evaluate_answer(query, context, answer, embeddings)
+
+                st.subheader("📊 Evaluation")
+                st.write(f"Relevance Score: {round(relevance, 2)}")
+                st.write(f"Faithfulness Score: {round(faithfulness, 2)}")
+
+                # Optional Progress Bars (nice UI)
+                st.progress(float(relevance))
+                st.progress(float(faithfulness))
+
+                # -----------------------------
+                # Source Context
+                # -----------------------------
                 with st.expander("🔍 Source Context"):
                     for i, doc in enumerate(results):
                         st.write(f"Chunk {i+1}:")
